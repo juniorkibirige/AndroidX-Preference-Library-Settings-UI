@@ -4,16 +4,19 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.navigation.fragment.NavHostFragment
-import androidx.preference.EditTextPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceManager
+import androidx.preference.*
 
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.settings, rootKey)
+
+        val dataStore = DataStore()
+        // enabling the preferenceDatastore disables the sharedPreferences
+        // And doesn't automatically span out to children
+//        preferenceManager.preferenceDataStore = dataStore
+
 
         val accSettingsPref = findPreference<Preference>(getString(R.string.key_account_settings))
 
@@ -58,7 +61,39 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        val notificationPref = findPreference<SwitchPreferenceCompat>(getString(R.string.key_new_msg_notif))
+        notificationPref?.summaryProvider = Preference.SummaryProvider<SwitchPreferenceCompat> { switchPref ->
+            if(switchPref?.isChecked!!)
+                "Status: ON"
+            else
+                "Status: OFF"
+        }
+        notificationPref?.preferenceDataStore = dataStore
 
+        val notifPrefValue = dataStore.getBoolean(getString(R.string.key_new_msg_notif), false)
+
+    }
+
+    class DataStore : PreferenceDataStore() {
+        // Override methods only as per need
+        // DO NOT override methods which you don't need to use
+        // After overriding, remove the super call
+        override fun putBoolean(key: String?, value: Boolean) {
+
+            if(key == "key_new_msg_notif") {
+                // Save value to cloud or else where
+                Log.i("DataStore", "putBoolean executed for $key with new value: $value")
+            }
+        }
+
+        override fun getBoolean(key: String?, defValue: Boolean): Boolean {
+
+            if(key == "key_new_msg_notif") {
+                // Retrieve value from cloud or else where
+                Log.i("Datastore", "getBoolean executed for $key")
+            }
+            return defValue
+        }
     }
 
 }
